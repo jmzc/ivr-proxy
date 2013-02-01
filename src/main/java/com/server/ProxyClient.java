@@ -31,7 +31,7 @@ public final class ProxyClient implements IoHandler
 		*/
 
 	// Puerto local SSH 
-	private static final int PORT = 4000;
+	private static final int PORT = 2002;
 	
 	
 	// Cliente
@@ -70,8 +70,8 @@ public final class ProxyClient implements IoHandler
 			
 			this.connector.getSessionConfig().setReadBufferSize(2048);
 		
-			this.connector.getFilterChain().addLast("logger", new LoggingFilter());
-			this.connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
+			//this.connector.getFilterChain().addLast("logger", new LoggingFilter());
+			//this.connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
 		
 			this.connector.setHandler(this);
 			
@@ -80,7 +80,7 @@ public final class ProxyClient implements IoHandler
 			 * Represents the completion of an asynchronous I/O operation on an IoSession. Can be listened for completion using a IoFutureListener.
 			 * 		CloseFuture, ConnectFuture, ReadFuture, WriteFuture
 			 */
-			System.out.println("Connecting ...");
+			System.out.println("Connecting client ...");
 			ConnectFuture future = this.connector.connect(new InetSocketAddress("127.0.0.1", PORT));
 		
 			/*
@@ -99,8 +99,13 @@ public final class ProxyClient implements IoHandler
 				throw new Exception();
 				
 			}
+			System.out.println("Client connected");
+			
 			//Returns IoSession which is the result of connect operation.
 			this.session = future.getSession();
+					
+			this.session.getConfig().setUseReadOperation(true);
+			
 			
 		}
 		catch(Exception e)
@@ -113,10 +118,14 @@ public final class ProxyClient implements IoHandler
 		
 	}
 
-	public void write(String m) throws Exception
+	public void write(Object m) throws Exception
 	{
+		System.out.println("Proxy message ..." + m);
 		if (this.session != null && this.session.isConnected())
+		{
+			System.out.println("Message proxied:" + m);
 			this.session.write(m);
+		}
 		else
 			throw new Exception();
 	}
@@ -152,13 +161,13 @@ public final class ProxyClient implements IoHandler
 	public void sessionClosed(IoSession session) throws Exception 
 	{
 		
-		logger.info("Client session closed:" + session.getId());
+		System.out.println("Client session closed:" + session.getId());
 	}
 	
 	@Override
 	public void sessionCreated(IoSession session) throws Exception 
 	{
-		logger.info("Client session created:" + session.getId());
+		System.out.println("Client session created:" + session.getId());
 	}
 
 	@Override
@@ -172,12 +181,12 @@ public final class ProxyClient implements IoHandler
 	public void messageReceived(IoSession session, Object message)
 	{
 		
-		logger.info("Message received in the client is: " + message.toString());
+		System.out.println("Message received in the client is: " + message.toString());
 		// Procesar mensaje para ver si cumple algun filtro 
 		
 		
 		// Llamar a un metodo de envio del servidor
-		ProxyServer.proxy.write(server,message.toString());
+		ProxyServer.proxy.write(server,message);
 		
 		
 	}
@@ -192,7 +201,7 @@ public final class ProxyClient implements IoHandler
 	public void messageSent(IoSession arg0, Object message) throws Exception 
 	{
 
-		logger.info("Message sent for the client is: " + message.toString());
+		System.out.println("Message sent for the client is: " + message.toString());
 	}
 
 	

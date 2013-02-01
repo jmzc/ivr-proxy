@@ -22,7 +22,7 @@ public class Client
 		*/
 
 	// Puerto local SSH 
-	private static final int PORT = 4000;
+	private static final int PORT = 2001;
 	
 	
 	
@@ -47,7 +47,7 @@ public class Client
 		 * 		CloseFuture, ConnectFuture, ReadFuture, WriteFuture
 		 */
 		System.out.println("Connecting ...");
-		ConnectFuture future = connector.connect(new InetSocketAddress("127.0.0.1", PORT));
+		ConnectFuture future = connector.connect(new InetSocketAddress("ivr2", PORT));
 	
 		/*
 		 * 	await()
@@ -74,7 +74,7 @@ public class Client
 		session.write("HOLA FONDO NORTE");
 	
 		//Enables or disabled IoSession.read() operation.
-		session.getConfig().setUseReadOperation(true);
+		//session.getConfig().setUseReadOperation(true);
 		
 		/*
 			getCloseFuture()

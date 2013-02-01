@@ -23,7 +23,7 @@ public class ProxyServer implements IoHandler
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(ProxyServer.class);
 	
 	
-	private static final int PORT = 4000;
+	private static final int PORT = 2001;
 
 	
 	static ProxyServer proxy;
@@ -65,6 +65,7 @@ public class ProxyServer implements IoHandler
 	private ProxyClient getProxyClient(IoSession session) throws Exception 
 	{
 		
+		System.out.println("getProxyClient");
 		ProxyClient c1 = this.getProxyClientMap(session);
 
 		if (c1!= null && c1.connected())
@@ -95,19 +96,19 @@ public class ProxyServer implements IoHandler
 			-	the second one is the “ProtocolCodecFilter” which is used to convert an incoming ByteBuffer into message POJO.
 		*/ 
 		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
-		acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
+		//acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
 
 		acceptor.setHandler(this);
 		
 		acceptor.getSessionConfig().setReadBufferSize(2048);
-		acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
+		//acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
 		
 		
 		acceptor.bind(new InetSocketAddress("127.0.0.1",port));
 	}
 	
 	
-	public void write(IoSession session, String message)
+	public void write(IoSession session, Object message)
 	{
 		// TODO REGLAS 
 		session.write(message);
@@ -118,8 +119,7 @@ public class ProxyServer implements IoHandler
 	{
 		logger.info("Server session created:" + session.getId());
 		
-		this.getProxyClient(session);
-	
+			
 	}
 
 	
@@ -172,16 +172,19 @@ public class ProxyServer implements IoHandler
 	@Override
 	public void messageReceived(IoSession session, Object message)
 	{
-		logger.info("Message received in the server is: " + message.toString());
+		
 		
 		try
 		{
+			System.out.println("Message received in the server is: " + message.toString());
 			ProxyClient client = this.getProxyClient(session);
-			client.write(message.toString());
+			client.write(message);
 			
 		}
 		catch(Exception e)
 		{
+			e.printStackTrace();
+			System.out.println("Error when sending message to IVR [" + e.getMessage() + "]");
 			logger.error("Error when sending message to IVR [" + e.getMessage() + "]");
 		}
 		
