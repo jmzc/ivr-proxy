@@ -31,12 +31,18 @@
 		<version>1.4.3</version>
 	  </dependency>
 	  
+	  	  
+	  	<!--
+    		Application Context (depends on spring-core, spring-expression, spring-aop, spring-beans)
+    		This is the central artifact for Spring's Dependency Injection Container and is generally always defined
+		-->
 	  
 	  <dependency>
-		  <groupId>org.springframework</groupId>
-		  <artifactId>spring-core</artifactId>
-		  <version>${org.springframework.version}</version>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-context</artifactId>
+		<version>${org.springframework.version}</version>
 	  </dependency>
+            
 	  
 	  
 	  <dependency>

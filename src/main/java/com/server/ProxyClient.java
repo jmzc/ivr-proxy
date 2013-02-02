@@ -3,7 +3,7 @@ package com.server;
 
 
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
+
 
 
 import org.apache.mina.core.future.CloseFuture;
@@ -12,9 +12,12 @@ import org.apache.mina.core.service.IoConnector;
 import org.apache.mina.core.service.IoHandler;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
+/*
+import java.nio.charset.Charset;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.logging.LoggingFilter;
+*/
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +33,7 @@ public final class ProxyClient implements IoHandler
 			WRITE BUFFER	[        ]            
 		*/
 
+	
 	// Puerto local SSH 
 	private static final int PORT = 2002;
 	
@@ -42,12 +46,23 @@ public final class ProxyClient implements IoHandler
 
 	
 	
+	private ProxyServer proxy;
+
+	public void setProxy(ProxyServer proxy) 
+	{
+		
+		this.proxy = proxy;
+		
+		logger.info("Set proxy:" + this.proxy.toString());
+	}
+
 
 	public ProxyClient(IoSession server) 
 	{
 		super();
 
-		this.server = server;
+		if (this.server != null)
+			this.server = server;
 		
 	}
 
@@ -80,7 +95,7 @@ public final class ProxyClient implements IoHandler
 			 * Represents the completion of an asynchronous I/O operation on an IoSession. Can be listened for completion using a IoFutureListener.
 			 * 		CloseFuture, ConnectFuture, ReadFuture, WriteFuture
 			 */
-			System.out.println("Connecting client ...");
+			logger.info("Connecting client ...");
 			ConnectFuture future = this.connector.connect(new InetSocketAddress("127.0.0.1", PORT));
 		
 			/*
@@ -99,7 +114,7 @@ public final class ProxyClient implements IoHandler
 				throw new Exception();
 				
 			}
-			System.out.println("Client connected");
+			logger.info("Client connected");
 			
 			//Returns IoSession which is the result of connect operation.
 			this.session = future.getSession();
@@ -120,10 +135,10 @@ public final class ProxyClient implements IoHandler
 
 	public void write(Object m) throws Exception
 	{
-		System.out.println("Proxy message ..." + m);
+		logger.info("Proxy message ..." + m);
 		if (this.session != null && this.session.isConnected())
 		{
-			System.out.println("Message proxied:" + m);
+			logger.info("Message proxied:" + m);
 			this.session.write(m);
 		}
 		else
@@ -161,13 +176,13 @@ public final class ProxyClient implements IoHandler
 	public void sessionClosed(IoSession session) throws Exception 
 	{
 		
-		System.out.println("Client session closed:" + session.getId());
+		logger.info("Client session closed:" + session.getId());
 	}
 	
 	@Override
 	public void sessionCreated(IoSession session) throws Exception 
 	{
-		System.out.println("Client session created:" + session.getId());
+		logger.info("Client session created:" + session.getId());
 	}
 
 	@Override
@@ -181,12 +196,12 @@ public final class ProxyClient implements IoHandler
 	public void messageReceived(IoSession session, Object message)
 	{
 		
-		System.out.println("Message received in the client is: " + message.toString());
+		logger.info("Message received in the client is: " + message.toString());
 		// Procesar mensaje para ver si cumple algun filtro 
 		
 		
 		// Llamar a un metodo de envio del servidor
-		ProxyServer.proxy.write(server,message);
+		this.proxy.write(server,message);
 		
 		
 	}
@@ -201,7 +216,7 @@ public final class ProxyClient implements IoHandler
 	public void messageSent(IoSession arg0, Object message) throws Exception 
 	{
 
-		System.out.println("Message sent for the client is: " + message.toString());
+		logger.info("Message sent for the client is: " + message.toString());
 	}
 
 	

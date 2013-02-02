@@ -47,7 +47,7 @@ public class Client
 		 * 		CloseFuture, ConnectFuture, ReadFuture, WriteFuture
 		 */
 		System.out.println("Connecting ...");
-		ConnectFuture future = connector.connect(new InetSocketAddress("ivr2", PORT));
+		ConnectFuture future = connector.connect(new InetSocketAddress("127.0.0.1", PORT));
 	
 		/*
 		 * 	await()

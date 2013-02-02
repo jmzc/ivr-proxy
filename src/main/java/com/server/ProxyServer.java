@@ -3,7 +3,7 @@ package com.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,33 +11,37 @@ import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.service.IoHandler;
+/*
+import java.nio.charset.Charset;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
+
+*/
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.springframework.context.*;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class ProxyServer implements IoHandler
 {
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(ProxyServer.class);
 	
 	
-	private static final int PORT = 2001;
+	public Integer port;
 
+	private static ApplicationContext context = new ClassPathXmlApplicationContext(new String[] {"services.xml"});		
 	
-	static ProxyServer proxy;
 	
 	public static void main(String[] args) throws IOException
 	{
 		try
 		{
-			ProxyServer server = new ProxyServer();
-			server.listen(PORT);
 			
-			// TODO Inicializar reglas
+			context.getBean(ProxyServer.class).listen();
 			
-			proxy = server;
 		}
 		catch(Exception e)
 		{
@@ -46,26 +50,29 @@ public class ProxyServer implements IoHandler
 	
 	}
 	
-	
+
+	public ProxyServer(int port) 
+	{
+		this.port = port;
+	}
+
+
 	private Map<Long,ProxyClient> h = new HashMap<Long,ProxyClient>();
 
 	
 	private ProxyClient getProxyClientMap(IoSession session)
 	{
-		long l = session.getId();
-		return h.get(l);
+		return h.get(session.getId());
 	}
 	
 	private void setProxyClientMap(IoSession session, ProxyClient client)
 	{
-		long l = session.getId();
-		h.put(l,client);
+		h.put(session.getId(),client);
 	}
 	
-	private ProxyClient getProxyClient(IoSession session) throws Exception 
+	public ProxyClient getProxyClient(IoSession session) throws Exception 
 	{
 		
-		System.out.println("getProxyClient");
 		ProxyClient c1 = this.getProxyClientMap(session);
 
 		if (c1!= null && c1.connected())
@@ -74,7 +81,7 @@ public class ProxyServer implements IoHandler
 		{
 			this.setProxyClientMap(session, null);
 			
-			ProxyClient c2 = new ProxyClient(session);
+			ProxyClient c2 = (ProxyClient)context.getBean("client", session);
 			c2.connect();
 
 			this.setProxyClientMap(session, c2);
@@ -85,7 +92,7 @@ public class ProxyServer implements IoHandler
 	}
 	
 	
-	private void listen(int port) throws Exception
+	private void listen() throws Exception
 	{
 		
 		IoAcceptor acceptor = new NioSocketAcceptor(); 
@@ -102,9 +109,9 @@ public class ProxyServer implements IoHandler
 		
 		acceptor.getSessionConfig().setReadBufferSize(2048);
 		//acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
-		
-		
-		acceptor.bind(new InetSocketAddress("127.0.0.1",port));
+
+		acceptor.bind(new InetSocketAddress("127.0.0.1", this.port));
+
 	}
 	
 	
@@ -127,10 +134,7 @@ public class ProxyServer implements IoHandler
 	public void sessionOpened(IoSession session)
 	{
 		logger.info("Server session opened:" + session.getId());
-		session.getConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10); 		// segundos
 		
-		
-
 	}
 	
 	@Override
@@ -172,20 +176,18 @@ public class ProxyServer implements IoHandler
 	@Override
 	public void messageReceived(IoSession session, Object message)
 	{
-		
-		
+
 		try
 		{
-			System.out.println("Message received in the server is: " + message.toString());
+
 			ProxyClient client = this.getProxyClient(session);
 			client.write(message);
 			
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
-			System.out.println("Error when sending message to IVR [" + e.getMessage() + "]");
-			logger.error("Error when sending message to IVR [" + e.getMessage() + "]");
+
+			logger.error("Server error when sending message to IVR [" + e.getMessage() + "]");
 		}
 		
 		
