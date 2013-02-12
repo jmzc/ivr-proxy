@@ -1,0 +1,22 @@
+
+
+
+
+								SERVER SIDE	   	CLIENT SIDE
+
+
+						 2002														  IVR
+	<------------------>  ()	iosession1	<|>  iosessionA 	<------------------->  ()
+	
+	
+	<------------------>		iosession2	<|>  iosessionB 	<------------------->
+	
+	
+	
+	
+	
+	1) Cuando un cliente se conecta al servidor (NioSocketAcceptor) se crea una session (IoSession)
+	
+	   // TODO: ¿ Cual es la diferencia entre sessionCreated() y sessionOpened() ?
+	   
+	
